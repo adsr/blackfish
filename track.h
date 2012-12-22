@@ -20,7 +20,6 @@ typedef struct track_s {
     struct sequencer_s* sequencer;
     struct step_s* steps;
     struct step_s* active_step;
-    int max_steps;
     track_type_t type;
     int num_steps;
     int num_enabled_steps;

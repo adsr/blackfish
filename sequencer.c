@@ -4,12 +4,16 @@
 
 #include "sequencer.h"
 #include "track.h"
+#include "config.h"
 
 sequencer_t* sequencer_new() {
-    int num_tracks = DEFAULT_NUM_TRACKS; // TODO make configurable
+    int num_tracks = config_get("sequencer.num_tracks", 16);
     sequencer_t* sequencer = (sequencer_t*)calloc(1, sizeof(sequencer_t));
     sequencer->clock_type = CLOCK_INTERNAL;
-    sequencer_set_bpm(sequencer, DEFAULT_BPM);
+    sequencer->ticks_per_beat = config_get("sequencer.ticks_per_beat", 4);
+    sequencer->max_steps_per_track = config_get("sequencer.max_steps_per_track", 256);
+    sequencer->default_track_length = config_get("track.default_length", 16);
+    sequencer_set_bpm(sequencer, (float)config_get("sequencer.default_bpm", 135));
     sequencer->state = STATE_STOP;
     sequencer->tracks = (track_t*)calloc(num_tracks, sizeof(track_t));
     int i;
@@ -58,7 +62,7 @@ int sequencer_set_bpm(sequencer_t* sequencer, float bpm) {
         return 1;
     }
     sequencer->bpm = bpm;
-    sequencer->delay_ms = (int)((60.0f / bpm) * (1000 / DEFAULT_TICKS_PER_BEAT));
+    sequencer->delay_ms = (int)((60.0f / bpm) * (1000 / sequencer->ticks_per_beat));
     return 0;
 }
 

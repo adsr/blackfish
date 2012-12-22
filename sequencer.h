@@ -7,10 +7,6 @@
 
 #include "track.h"
 
-#define DEFAULT_NUM_TRACKS 16
-#define DEFAULT_BPM 135.0f
-#define DEFAULT_TICKS_PER_BEAT 4
-
 typedef enum {CLOCK_INTERNAL, CLOCK_EXTERNAL} sequencer_clock_t;
 
 typedef enum {STATE_PLAY, STATE_PAUSE, STATE_STOP} sequencer_state_t;
@@ -24,6 +20,9 @@ typedef struct sequencer_s {
     SDL_Thread* thread;
     struct track_s* tracks;
     int num_tracks;
+    int max_steps_per_track;
+    int ticks_per_beat;
+    int default_track_length;
 } sequencer_t;
 
 int sequencer_loop(void* data);

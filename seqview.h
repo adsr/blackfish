@@ -4,16 +4,20 @@
 #include <SDL/SDL.h>
 #include "sequencer.h"
 
-#define SEQVIEW_STEP_SIZE 32
-#define SEQVIEW_STEP_PADDING 4
-#define SEQVIEW_STEP_COLOR_ACTIVE_RGB 0xc0,0xc0,0xc0
-#define SEQVIEW_STEP_COLOR_INACTIVE_RGB 0x80,0x80,0x80
-#define SEQVIEW_BACKGROUND_COLOR_RGB 0x30,0x30,0x30
+#define SEQVIEW_COLOR_STEP_ACTIVE 0xc0,0xc0,0xc0
+#define SEQVIEW_COLOR_STEP_INACTIVE 0x80,0x80,0x80
+#define SEQVIEW_COLOR_BACKGROUND 0x30,0x30,0x30
 
 typedef struct seqview_s {
     SDL_Surface* surface;
     sequencer_t* sequencer;
     SDL_Rect viewport_rect;
+    Uint32 color_background;
+    Uint32 color_step_active;
+    Uint32 color_step_inactive;
+    Uint32 color_step_focus;
+    int step_size;
+    int step_padding;
 } seqview_t;
 
 seqview_t* seqview_new(SDL_Surface* screen, sequencer_t* sequencer);

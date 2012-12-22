@@ -6,16 +6,16 @@
 #include "sequencer.h"
 #include "step.h"
 #include "util.h"
+#include "config.h"
 
 int track_init(track_t* track, sequencer_t* sequencer) {
     track->sequencer = sequencer;
-    track->steps = (step_t*)calloc(DEFAULT_MAX_STEPS_PER_TRACK, sizeof(step_t));
+    track->steps = (step_t*)calloc(sequencer->max_steps_per_track, sizeof(step_t));
     track->active_step = NULL;
-    track->max_steps = DEFAULT_MAX_STEPS_PER_TRACK;
     track->type = TYPE_NOTE;
-    track->num_steps = DEFAULT_TRACK_LENGTH;
+    track->num_steps = sequencer->default_track_length;
     int i;
-    for (i = 0; i < track->max_steps; i++) {
+    for (i = 0; i < sequencer->max_steps_per_track; i++) {
         step_init(track, &track->steps[i]);
     }
     track->num_enabled_steps = track->num_steps;
@@ -27,9 +27,9 @@ int track_init(track_t* track, sequencer_t* sequencer) {
     track->step_offset = 0;
     track->step_roll_start = 0;
     track->step_roll_length = 1;
-    track->note_velocity = DEFAULT_TRACK_NOTE_VELOCITY;
-    track->note_duration = DEFAULT_TRACK_NOTE_DURATION;
-    track->note_gate = DEFAULT_TRACK_NOTE_GATE;
+    track->note_velocity = config_get("track.default_note_velocity", 100);
+    track->note_duration = config_get("track.default_note_duration", 1);
+    track->note_gate = (float)(config_get("track.default_note_gate", 16) / 16.0f);
     track->transpose_delta = 0;
     track->is_rolling = FALSE;
     track->is_muted = FALSE;
@@ -46,13 +46,13 @@ int track_reset(track_t* track) {
 }
 
 int track_set_length(track_t* self, int length) {
-    length = MAX(1, MIN(self->max_steps, length));
+    length = MAX(1, MIN(self->sequencer->max_steps_per_track, length));
     self->num_steps = length;
     return 0;
 }
 
 int track_set_step_enable(track_t* self, int step_index, bool enabled) {
-    step_index = MAX(0, MIN(self->max_steps - 1, step_index));
+    step_index = MAX(0, MIN(self->sequencer->max_steps_per_track - 1, step_index));
     (self->steps + step_index)->is_enabled = enabled;
     self->num_enabled_steps += (enabled ? 1 : -1);
     return 0;

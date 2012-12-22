@@ -3,8 +3,10 @@
 #include <stdbool.h>
 #include <argp.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_getenv.h>
 #include <SDL/SDL_thread.h>
 #include <SDL/SDL_mutex.h>
+#include <SDL/SDL_ttf.h>
 #include <portmidi.h>
 #include <lua5.2/lua.h>
 #include <lua5.2/lauxlib.h>
@@ -13,6 +15,7 @@
 #include "sequencer.h"
 #include "seqview.h"
 #include "util.h"
+#include "config.h"
 
 #define FPS 32
 
@@ -30,6 +33,9 @@ int main(int argc, char** argv) {
     // TODO Parse arguments
     // http://www.gnu.org/software/libc/manual/html_node/Argp-Example-3.html#Argp-Example-3
 
+    config_put("seqview.width", 600);
+    config_put("seqview.height", 400);
+
     // Init PortMidi
     if (Pm_Initialize() != pmNoError) {
         fprintf(stderr, "Could not init PortMidi\n");
@@ -43,6 +49,9 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    // Ensure SDL win is centered
+    putenv("SDL_VIDEO_CENTERED=1");
+
     // Init SDL
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "Could not init SDL\n");
@@ -50,10 +59,17 @@ int main(int argc, char** argv) {
     }
     atexit(SDL_Quit);
 
+    // Init SDL ttf
+    if (TTF_Init() < 0) {
+        fprintf(stderr, "Could not init SDL ttf\n");
+        exit(EXIT_FAILURE);
+    }
+    atexit(TTF_Quit);
+
     // Create an 8-bpp 1000x600 resizable window
     SDL_Surface* screen = SDL_SetVideoMode(
-        1000,
-        600,
+        config_get("seqview.width", 1000),
+        config_get("seqview.height", 600),
         8,
         SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF | SDL_ANYFORMAT
     );
