@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <argp.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_getenv.h>
 #include <SDL/SDL_thread.h>
@@ -17,24 +16,31 @@
 #include "util.h"
 #include "config.h"
 
-#define FPS 32
-
+// Init argp globals
 const char *argp_program_version = "blackfish 0.1";
 const char *argp_program_bug_address = "<adam@atoi.cc>";
+
+// Declare function prototypes
+int main_loop();
+int main_init_screen(SDL_Surface** screen, int width, int height);
 
 /**
  * Program entry point
  *
  * @param int argc
  * @param char** argv
- * @return exit status
+ * @return int exit status
  */
 int main(int argc, char** argv) {
+    SDL_Surface* screen;
+    sequencer_t* sequencer;
+    seqview_t* seqview;
+    lua_State* lua_state;
+
     // TODO Parse arguments
     // http://www.gnu.org/software/libc/manual/html_node/Argp-Example-3.html#Argp-Example-3
-
-    config_put("seqview.width", 600);
-    config_put("seqview.height", 400);
+    //config_put("seqview.width", 600);
+    //config_put("seqview.height", 400);
 
     // Init PortMidi
     if (Pm_Initialize() != pmNoError) {
@@ -43,7 +49,7 @@ int main(int argc, char** argv) {
     }
 
     // Init Lua
-    lua_State* lua_state = luaL_newstate();
+    lua_state = luaL_newstate();
     if (!lua_state) {
         fprintf(stderr, "Could not init Lua\n");
         exit(EXIT_FAILURE);
@@ -66,30 +72,45 @@ int main(int argc, char** argv) {
     }
     atexit(TTF_Quit);
 
-    // Create an 8-bpp 1000x600 resizable window
-    SDL_Surface* screen = SDL_SetVideoMode(
+    // Create screen
+    main_init_screen(
+        &screen,
         config_get("seqview.width", 1000),
-        config_get("seqview.height", 600),
-        8,
-        SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF | SDL_ANYFORMAT
+        config_get("seqview.height", 700)
     );
 
     // Set window title
     SDL_WM_SetCaption(argp_program_version, 0);
 
     // Create sequencer
-    sequencer_t* sequencer = sequencer_new();
+    sequencer = sequencer_new();
     sequencer_start(sequencer);
 
     // Create sequencer view
-    seqview_t* seqview = seqview_new(screen, sequencer);
+    seqview = seqview_new(screen, sequencer);
 
-    // Enter rendering loop
+    // Invoke main program loop
+    main_loop(screen, seqview);
+
+    // Cleanup
+    Pm_Terminate();
+    exit(EXIT_SUCCESS);
+}
+
+/**
+ * Main rendering loop
+ *
+ * @param SDL_Surface* screen
+ * @param seqview_t* seqview
+ */
+int main_loop(SDL_Surface* screen, seqview_t* seqview) {
     Uint32 frame_start;
-    Uint32 frame_time = 1000.0f / FPS;
-    Uint32 delay_time;
+    Uint32 frame_time = 1000.0f / config_get("seqview.fps", 32);
+    Sint32 delay_time;
     SDL_Event event;
     bool done = FALSE;
+    SDL_Rect r;
+
     while (1) {
         frame_start = SDL_GetTicks();
 
@@ -100,13 +121,11 @@ int main(int argc, char** argv) {
                     done = TRUE;
                     break;
                 case SDL_VIDEORESIZE:
-                    screen = SDL_SetVideoMode(
-                        event.resize.w,
-                        event.resize.h,
-                        8,
-                        SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF | SDL_ANYFORMAT
-                    );
-                    SDL_Rect r = {0, 0, event.resize.w, event.resize.h};
+                    main_init_screen(&screen, event.resize.w, event.resize.h);
+                    r.x = 0;
+                    r.y = 0;
+                    r.w = event.resize.w;
+                    r.h = event.resize.h;
                     seqview->viewport_rect = r;
                     frame_start = SDL_GetTicks();
                     break;
@@ -126,6 +145,22 @@ int main(int argc, char** argv) {
         }
     }
 
-    Pm_Terminate();
-    exit(EXIT_SUCCESS);
+    return 0;
+}
+
+/**
+ * (Re)inits screen to size width x height
+ *
+ * @param SDL_Surface** screen
+ * @param int width
+ * @param int height
+ */
+int main_init_screen(SDL_Surface** screen, int width, int height) {
+    *screen = SDL_SetVideoMode(
+        width,
+        height,
+        config_get("seqview.surface_bpp", 16),
+        SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF | SDL_ANYFORMAT
+    );
+    return 0;
 }

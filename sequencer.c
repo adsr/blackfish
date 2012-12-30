@@ -7,7 +7,7 @@
 #include "config.h"
 
 sequencer_t* sequencer_new() {
-    int num_tracks = config_get("sequencer.num_tracks", 16);
+    int num_tracks = config_get("sequencer.num_tracks", 6);
     sequencer_t* sequencer = (sequencer_t*)calloc(1, sizeof(sequencer_t));
     sequencer->clock_type = CLOCK_INTERNAL;
     sequencer->ticks_per_beat = config_get("sequencer.ticks_per_beat", 4);
