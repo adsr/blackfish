@@ -9,12 +9,12 @@
 #include "config.h"
 
 int track_init(track_t* track, sequencer_t* sequencer) {
+    int i;
     track->sequencer = sequencer;
     track->steps = (step_t*)calloc(sequencer->max_steps_per_track, sizeof(step_t));
     track->active_step = NULL;
     track->type = TYPE_NOTE;
     track->num_steps = sequencer->default_track_length;
-    int i;
     for (i = 0; i < sequencer->max_steps_per_track; i++) {
         step_init(track, &track->steps[i]);
     }
@@ -59,17 +59,19 @@ int track_set_step_enable(track_t* self, int step_index, bool enabled) {
 }
 
 int track_on_clock_tick(track_t* track) {
+    int step_cursor;
+    int i;
+
     if (track->num_enabled_steps < 1) {
         return 0;
     }
 
-    int step_cursor = track->step_counter + track->step_offset;
+    step_cursor = track->step_counter + track->step_offset;
     if (track->is_rolling) {
         step_cursor = track->step_roll_start + (step_cursor % track->step_roll_length);
     }
 
     step_cursor = step_cursor % track->num_enabled_steps;
-    int i;
     for (i = 0; i < track->num_steps; i++) {
         if (track->steps[i].is_enabled) {
             if (step_cursor > 0) {

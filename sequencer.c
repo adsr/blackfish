@@ -7,8 +7,12 @@
 #include "config.h"
 
 sequencer_t* sequencer_new() {
-    int num_tracks = config_get("sequencer.num_tracks", 6);
-    sequencer_t* sequencer = (sequencer_t*)calloc(1, sizeof(sequencer_t));
+    int i;
+    int num_tracks;
+    sequencer_t* sequencer;
+
+    num_tracks = config_get("sequencer.num_tracks", 6);
+    sequencer = (sequencer_t*)calloc(1, sizeof(sequencer_t));
     sequencer->clock_type = CLOCK_INTERNAL;
     sequencer->ticks_per_beat = config_get("sequencer.ticks_per_beat", 4);
     sequencer->max_steps_per_track = config_get("sequencer.max_steps_per_track", 256);
@@ -16,7 +20,6 @@ sequencer_t* sequencer_new() {
     sequencer_set_bpm(sequencer, (float)config_get("sequencer.default_bpm", 135));
     sequencer->state = STATE_STOP;
     sequencer->tracks = (track_t*)calloc(num_tracks, sizeof(track_t));
-    int i;
     for (i = 0; i < num_tracks; i++) {
         track_init(&sequencer->tracks[i], sequencer);
     }
@@ -25,11 +28,14 @@ sequencer_t* sequencer_new() {
 }
 
 int sequencer_loop(void* data) {
-    sequencer_t* sequencer = (sequencer_t*)data;
-    // Enter sequencer loop
+    sequencer_t* sequencer;
     Uint32 tick_start;
     Uint32 delay_time;
     int i;
+
+    sequencer = (sequencer_t*)data;
+
+    // Enter sequencer loop
     while (1) {
         // Remember start of tick
         tick_start = SDL_GetTicks();

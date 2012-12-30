@@ -7,9 +7,9 @@
 #include "track.h"
 
 void step_init(track_t* track, step_t* step) {
+    int i;
     step->track = track;
     step->notes = (int*)calloc(DEFAULT_MAX_NOTES_PER_STEP, sizeof(int));
-    int i;
     for (i = 0; i < DEFAULT_MAX_NOTES_PER_STEP; i++) {
         step->notes[i] = NOTE_NONE;
     }

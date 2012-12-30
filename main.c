@@ -24,6 +24,11 @@ const char *argp_program_bug_address = "<adam@atoi.cc>";
 int main_loop();
 int main_init_screen(SDL_Surface** screen, int width, int height);
 
+// Crap fix for MSVC
+#ifdef _WIN32
+#undef main
+#endif
+
 /**
  * Program entry point
  *
@@ -31,7 +36,7 @@ int main_init_screen(SDL_Surface** screen, int width, int height);
  * @param char** argv
  * @return int exit status
  */
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
     SDL_Surface* screen;
     sequencer_t* sequencer;
     seqview_t* seqview;
