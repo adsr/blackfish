@@ -46,8 +46,18 @@ int track_reset(track_t* track) {
 }
 
 int track_set_length(track_t* self, int length) {
+    int step_i;
+    int num_enabled_steps;
+
     length = MAX(1, MIN(self->sequencer->max_steps_per_track, length));
     self->num_steps = length;
+    num_enabled_steps = 0;
+    for (step_i = 0; step_i < self->num_steps; step_i++) {
+        if (self->steps[step_i].is_enabled) {
+            num_enabled_steps += 1;
+        }
+    }
+    self->num_enabled_steps = num_enabled_steps;
     return 0;
 }
 

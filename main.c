@@ -87,6 +87,9 @@ int main(int argc, char* argv[]) {
     // Set window title
     SDL_WM_SetCaption(argp_program_version, 0);
 
+    // Enable unicode
+    SDL_EnableUNICODE(1);
+
     // Create sequencer
     sequencer = sequencer_new();
     sequencer_start(sequencer);
@@ -110,17 +113,20 @@ int main(int argc, char* argv[]) {
  */
 int main_loop(SDL_Surface* screen, seqview_t* seqview) {
     Uint32 frame_start;
-    Uint32 frame_time = 1000.0f / config_get("seqview.fps", 32);
+    Uint32 frame_time;
     Sint32 delay_time;
     SDL_Event event;
+    SDLKey key;
+    SDL_keysym keysym;
     bool done = FALSE;
     SDL_Rect r;
 
+    frame_time = 1000.0f / config_get("seqview.fps", 32);
     while (1) {
         frame_start = SDL_GetTicks();
 
         // Handle events
-        while (SDL_PollEvent(&event)) {
+        while (SDL_PollEvent(&event) && !done) {
             switch (event.type) {
                 case SDL_QUIT:
                     done = TRUE;
@@ -133,6 +139,13 @@ int main_loop(SDL_Surface* screen, seqview_t* seqview) {
                     r.h = event.resize.h;
                     seqview->viewport_rect = r;
                     frame_start = SDL_GetTicks();
+                    break;
+                case SDL_KEYDOWN:
+                    seqview_handle_input_key(seqview, event.key);
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONUP:
+                    seqview_handle_input_mouse(seqview, event.button);
                     break;
             }
         }
